@@ -5,8 +5,6 @@ using Generate_Name_Guid.DTO;
 var pathOutput = "C:\\Vendra\\OutputFIle\\File";
 var jsonOutput = "C:\\Vendra\\OutputFIle\\JSON";
 
-args = ["12", "PMT", "C:\\Vendra\\Support\\ASOKA GRAHA SURYA (Batch 1).pdf"];
-
 if (args.Length != 3)
 {
     Console.WriteLine("Usage: Generate_Name_Guid <Count> <PrefixFolder> <SourceFile>");
