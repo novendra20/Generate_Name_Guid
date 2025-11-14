@@ -1,5 +1,7 @@
 ﻿using Generate_Name_Guid.DTO;
 using System.Text.Json;
+using OfficeOpenXml;
+using System.ComponentModel;
 
 namespace Generate_Name_Guid
 {
@@ -13,7 +15,7 @@ namespace Generate_Name_Guid
                 Message = String.Empty
             };
 
-            List<List<FilePath>> ListFile = new List<List<FilePath>>();
+            List<string> ListFile = new List<string>();
 
             if (string.IsNullOrWhiteSpace(request.DestinationPathFile) || string.IsNullOrWhiteSpace(request.DestinatonJsonFile))
             {
@@ -90,21 +92,22 @@ namespace Generate_Name_Guid
                     };
                     File.Copy(v, pathCombineDestination, false);
                     tempFile.Add(jsonFile);
-                    ListFile.Add(tempFile);
+
+                    var jsonResult = JsonSerializer.Serialize(tempFile, new JsonSerializerOptions
+                    {
+                        WriteIndented = false
+                    });
+
+                    ListFile.Add(jsonResult);
 
                 }
             }
-
-            var jsonResult = JsonSerializer.Serialize(ListFile, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
 
             int name = 1;
             var pathCombineJsonFileFinal = string.Empty;
             while (true)
             {
-                var listJsonName = $"Generate_{date}_{i}_{name}.txt";
+                var listJsonName = $"Generate_{date}_{i}_{name}.xlsx";
                 pathCombineJsonFileFinal = Path.Combine(pathCombineJsonFile, listJsonName);
                 var fi = new FileInfo(pathCombineJsonFileFinal);
                 if (!fi.Exists)
@@ -114,7 +117,28 @@ namespace Generate_Name_Guid
                 name++;
             }
 
-            File.WriteAllText(pathCombineJsonFileFinal, jsonResult);
+            ExcelPackage.License.SetNonCommercialPersonal("Novendra");
+
+            using (var excel = new ExcelPackage())
+            {
+                var ws = excel.Workbook.Worksheets.Add("GeneratedFiles");
+                ws.Cells[1, 1].Value = "FilePaths";
+
+                int row = 2;
+                foreach (var filePath in ListFile)
+                {
+                    ws.Cells[row, 1].Value = filePath;
+                    row++;
+                }
+
+                if (ws.Dimension != null)
+                {
+                    ws.Cells[ws.Dimension.Address].AutoFitColumns();
+                }
+
+                var fileExcel = new FileInfo(pathCombineJsonFileFinal);
+                excel.SaveAs(fileExcel);
+            }
 
             return result;
         }
